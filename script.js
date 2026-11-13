@@ -48,9 +48,14 @@ const skipBtn = document.getElementById('skipBtn');
 const retryBtn = document.getElementById('retryBtn');
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon = document.getElementById('themeIcon');
+const timerDisplay = document.getElementById('timer');
+
+const TIMER_DURATION = 5 * 60;
 
 let bag = [];
 let currentIndex = null;
+let timerInterval = null;
+let timeLeft = TIMER_DURATION;
 
 function shuffle(array) {
   const result = array.slice();
@@ -59,6 +64,35 @@ function shuffle(array) {
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function stopTimer() {
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function resetTimer() {
+  stopTimer();
+  timeLeft = TIMER_DURATION;
+  timerDisplay.textContent = formatTime(timeLeft);
+  timerDisplay.classList.remove('is-warning');
+  timerInterval = setInterval(() => {
+    timeLeft -= 1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      stopTimer();
+    }
+    timerDisplay.textContent = formatTime(timeLeft);
+    timerDisplay.classList.toggle('is-warning', timeLeft <= 30);
+  }, 1000);
 }
 
 function startRound() {
@@ -73,9 +107,11 @@ function startRound() {
 function showNextQuestion() {
   currentIndex = bag.pop();
   questionText.textContent = QUESTIONS[currentIndex];
+  resetTimer();
 }
 
 function finishRound() {
+  stopTimer();
   card.hidden = true;
   actions.hidden = true;
   congrats.hidden = false;
